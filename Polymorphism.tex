@@ -1,0 +1,110 @@
+% !TEX root = main.tex 
+
+\section{Polymorphism}
+
+\subsection{Introduction}
+The word \emph{polymorphism} has its roots in the greek language and translated literally means \emph{many forms}. The concept carried by the word found naturally its place in computer science as a necessary step towards abstraction. 
+
+For example, when we think of the identity function, we think of a function that given a value $x$ as input returns the same value $x$ as output. In defining how the identity function computes we do not consider the type of the input. 
+
+In the simply typed lambda calculus we cannot think of \emph{the} identity function. What we have are \emph{instances} of this abstract concept. For example, we have an identity function $id_{Nat}$ that acts on the natural numbers 
+\begin{align*}
+\lambda x: Nat. \ x 
+\end{align*}
+
+as well as an identity function $id_{Bool}$ that acts on the booleans 
+\begin{align*}
+\lambda x: Bool. \ x 
+\end{align*}
+
+but these are particular cases of 
+\begin{align*}
+\lambda x: X. \ x 
+\end{align*}
+
+where $X$ is a placeholder that can be replaced by any type that we wish. 
+
+Polymorphism represents precisely this. We abstract from a term its type annotations, similarly to what happens  in the lambda calculus where variable abstraction abstracts from a term its variables.  
+
+Thus, our polymorphic identity function $id$ is now represented by
+\begin{align*}
+\lambda X. \lambda x: X . \ x 
+\end{align*}
+where the prefix $\lambda X$ means that the function $id$ is defined for any type $X$. As $\to$ stands for the type constructor correspondent to \emph{abstraction}, $\forall X$ will stand for the type constructor correspondent to \emph{type abstraction}. Thus, the type of our $id$ function is $\forall X . (X \to X )$. 
+
+Analogously we can define the substitution of a type variable $X$ for a type $T$ in a term $t$, denoted by $[X \mapsto T]t$. And then the terms $id_{Nat}$ and $id_{Bool}$ may be expressed as $id \ [Nat]$ and $id \ [Bool]$ respectively, where $id[T]$ shall be evaluated to $[X \mapsto T] (\lambda x: X . \ x)$. 
+
+\subsection{System F} 
+
+In this section we will extend the simply typed lambda calculus to consider polymorphic types. The first step is obtained by extending the ${<}type{>}$ syntactic category in order to obtain polymorphism. 
+
+\begin{align*}
+{<}type{>} ::= & \  \ldots \\ 
+|& \  \forall {<}typeVar{>}. \ {<}type{>} 
+\end{align*}
+
+The new type shall be the type of the polymorphic terms. And these terms shall acquire their meaning when applied to a particular type. 
+
+\begin{align*}
+{<}term{>} :: = & \ \ldots \\
+|& \ \lambda {<}typeVar{>}. \ {<}term{>} \tag{type abstraction} \\
+|& \ {<}term{>} \textbf{[} {<}type{>} \textbf{]} \tag{type application}
+\end{align*}
+
+
+The analogy between \emph{type abstraction} and \emph{abstraction} continues. For if an application of an abstraction $\lambda x . \ s$ to a term $t$ has its meaning rendered by the operational rule 
+\begin{align*}
+(\lambda x. \ s) t \to [x \mapsto t] s
+\end{align*}
+where $[x \mapsto t] s$ is the term obtained from $s$ by replacing every occurrence of variable $x$ by $t$; so the application of a type abstraction $\lambda X. s$  to a type $T$ has its meaning rendered by
+\begin{align*}
+(\lambda X. \ s) [T] \to [X \mapsto T] s 
+\end{align*}
+where analogously $[X \mapsto T] s$ denotes the term obtained by replacing every occurrence of the type variable $X$ in $s$ by the type $T$ and whose meaning is captured formally by the following recursive definitions for types 
+\begin{align*}
+[X \mapsto T] Y  &= 
+\begin{cases}
+Y \text{, if } Y \neq X \\
+T \text{, if } Y = X 
+\end{cases}\\
+[X \mapsto T] (T_1 \to T_2) &= ([X \mapsto T] T_1) \to ([X \mapsto T] T_2) \\
+[X \mapsto T](\forall Y. \  S ) &= 
+\begin{cases}
+\forall Y . \ S \text{, if } Y = X \\
+\forall Y. \ [X \mapsto T] S \text{, if } Y \neq X 
+\end{cases}
+\end{align*}
+
+and for terms 
+\begin{align*}
+[X \mapsto T]x &= x\\
+[X \mapsto T] (t_1t_2) &=( [X \mapsto T] t_1) ([X \mapsto T]t_2) \\
+[X \mapsto T] (\lambda x:S . \ t) &= \lambda x : ([X \mapsto T] S). \ ([X \mapsto T] t)\\
+[X \mapsto T] (\lambda Y. \ t) &= 
+\begin{cases}
+\lambda Y. \ t \text{, if } Y = X \\
+\lambda Y . [X \mapsto T] t \text{, if } Y \neq X 
+\end{cases}\\
+[X \mapsto T] (t[S]) =& ([X \mapsto T] t)[[X \mapsto T]S]
+\end{align*}
+
+Observe that the operation $[X \mapsto T]$ is well-defined, that is: if $S$ is type, then so it is $[X \mapsto T]S$; if $t$ is a term, then so it is $[X \mapsto T] t$. 
+
+As we are allowing terms of the form $t[T]$ where $t$ does not have necessarily to be a type abstraction we have to inform how these terms shall be evaluated. Well, no surprise: we evaluate $t$ until we arrive to a type abstraction. It is therefore a contextual rule and to incorporate it in our contextual rule scheme given for the simply typed lambda calculus we extend the notion of context 
+
+\begin{align*}
+{<}context{>} ::=& \  \ldots \\
+|& \ {<}context{>}[{<}type{>}]
+\end{align*}
+
+
+
+
+
+
+
+
+
+
+
+

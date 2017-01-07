@@ -1,0 +1,195 @@
+% !TEX root = main.tex 
+
+\section{Typing in STLC + References}
+When evaluating the type of an expression we have to consider the type of the locations of that expression. For example, the expression $\lambda x: \ T. \ (!l)x$ should have a type only if $(!l) : T \to T^{'}$, for some type $T^{'}$. Therefore, similar to what happened in the definition of the $\to$-relation we have to take in consideration the memory in which the term is being assigned a type. But now we do not need to know the values that the locations refer to. Only their types.  Thus, let $\mu$ stand for a partial map from locations to types. §
+
+\begin{align*}
+\frac
+{}
+{ {<} \Gamma, x:T; \mu {>} \vdash x:T}\label{rule:typeVar} \tag{R-TypeVar}\\
+\\
+\frac
+{{<}\Gamma, x:T_{1}; \mu {>} \vdash t:T_{2}}
+{{<}\Gamma; \mu {>} \vdash \lambda x:T_{1}. \ t : T_{1} \to T_{2}} \label{rule:typeAbs} \tag{R-TypeAbs}\\
+\\
+\frac
+{{<} \Gamma; \mu {>} \vdash t_1 : T_1 \to T_2 \quad {<} \Gamma; \mu {>} \vdash t_2 : T_1  }
+{ {<} \Gamma; \mu {>} \vdash t_1t_2 : T_2} \label{rule:typeApp} \tag{R-TypeApp}\\
+\\
+\frac
+{ {<} \Gamma ; \mu {>} \vdash t: T}
+{{<} \Gamma ; \mu {>} \vdash new \ t : ref \ T} \label{rule:typeNew} \tag{R-TypeNew}\\
+\\
+\frac
+{\mu(l) = T}
+{{<} \Gamma; \mu {>} \vdash l : ref \ T} \label{rule:typeLoc} \tag{R-TypeLoc} \\
+\\
+\frac 
+{{<} \Gamma; \mu {>} \vdash t: ref \ T } 
+{{<} \Gamma; \mu {>} \vdash !t : T} \label{rule:type!} \tag{R-Type!} \\
+\\
+\frac
+{{<} \Gamma; \mu {>} \vdash t_1 : ref \ T \quad {<} \Gamma; \mu {>} \vdash t_2 : T}
+{{<} \Gamma; \mu {>} \vdash t_1 := t_2 : T} \label{rule:typeAss} \tag{R-TypeAss}
+\end{align*}
+
+The uniqueness of the typing relation follows easily from the remark of the last section. 
+
+\begin{lemma}[Uniqueness of the typing relation]
+If ${<} \Gamma; \mu {>} \vdash t: T$ and ${<} \Gamma; \mu {>} \vdash t : T^{'}$, then $T = T ^{'}$. 
+\end{lemma}
+
+The variables present in a given context play exactly the same role as they did for STLC. Not surprisingly then, we observe that we can infer the type of a term only if we know the type of the free variables. We extend the definition of $FV(t)$ accordingly 
+
+%%%% defininf FV(t)
+\begin{align*}
+FV(l) &= \emptyset \\
+FV(new \ t) &= FV(t) \\ 
+FV(!t) &= FV(t) \\
+FV(t_1 : = t_2) &= FV(t_1) \cup FV(t_2)
+\end{align*}
+
+%%%% the free variables are contained in the context
+\begin{lemma} \label{lemma:STLCTypingPreserveVar}
+If ${<} \Gamma; \mu {>} \vdash t: T$, then $FV(t) \subseteq domain(\Gamma)$. 
+\end{lemma}
+
+Similarly,  if we want to evaluate the type of term $t$ we have to know the type of the locations that occur in $t$. Let $L(t)$ stand for the set of locations that occur in $t$. We can define $L$ inductively as follows 
+
+%%%% defining L(t) 
+\begin{align*}
+L(l) &= \{l\} \\
+L(new \ t) &= L(t) \\
+L(!t) &= L(t) \\
+L(t_1 := t_2) &= L(t_1) \cup L(t_2) \\
+L(x) &= \emptyset \\
+L(t_1t_2) &= L(t_1) \cup L(t_2) \\
+L(\lambda x: T. \ t) &= L(t) 
+\end{align*}
+
+And we are now in conditions of stating a result similar to the previous lemma. 
+
+%%%% locations are contained in \mu 
+\begin{lemma}\label{lemma:locInMu}
+If ${<} \Gamma; \mu{>} \vdash t: T,$ then $L(t) \subseteq domain(\mu)$.
+\end{lemma}
+\begin{proof}
+The proof is by induction on the structure of $t$. We only prove the cases where $t = l$, where $l$ is a location and $t = t_1 : = t_2$. The remaining cases are similar. 
+\begin{itemize}
+\item If $t = l$, for some location $l$, then $L(t) = \{l\}$. Additionaly, the derivation ${<} \Gamma; \mu {>} \vdash t: T$  can only be inferred by applying rule \eqref{rule:typeLoc}. Then, $\mu(l) = T$ and therefore $l \in domain(\mu)$. 
+\item Suppose $t = t_1 := t_2$. In the derivation ${<} \Gamma; \mu {>} \vdash t_1 : = t_2 : T$ the last rule applied is \eqref{rule:typeAss}. Thus, ${<} \Gamma; \mu {>} \vdash t_1 : ref \ T$ and ${<} \Gamma; \mu {>} \vdash t_2 : T$. Applying the inductive hypothesis to both $t_1$ and $t_2$ we get $L(t_1) \subseteq \mu$ and $L(t_2) \subseteq \mu$, which in turn implies $L(t) = L(t_1) \cup L(t_2) \subseteq \mu$. 
+\end{itemize}
+\end{proof} 
+
+%%%% \mu and \mu^{'} need only to agree on the locations contained in L(t) 
+We are also expecting that in a typing judgment ${<} \Gamma; \mu {>} \vdash t:T$ the only relevant information of $\mu$ is that concerning the locations that actually occur in $t$. 
+
+\begin{lemma}\label{lemma:agreeLoc}
+Suppose ${<} \Gamma; \mu {>} \vdash t : T$. Let $\mu^{'}$ be such that $\mu^{'}(l) = \mu(l)$ for every $l \in L(t)$. Then, ${<} \Gamma; \mu^{'}{>} \vdash t : T$.  
+\end{lemma}
+\begin{proof}
+The proof is by induction on the structure of the typing derivation ${<} \Gamma; \mu {>} \vdash t : T$.  We prove only a few cases. The remaining ones are either trivial or can be obtained analogously. 
+\begin{itemize}
+\item \eqref{rule:typeLoc}. We have ${<} \Gamma; \mu {>} \vdash l : ref \ T$ with $\mu(l) = T$. By hypothesis, $\mu^{'}(l) = T$, as $l \in L(l)$, and therefore we can obtain ${<} \Gamma ; \mu^{'} {>} \vdash l : ref \ T$ using the same rule.
+
+\item \eqref{rule:typeNew}. Since ${<} \Gamma; \mu {>} \vdash new \ t: ref \ T$, then ${<} \Gamma; \mu {>} \vdash t : T$. Furthermore, as $L(new \ t) =  L (t)$ we can apply the inductive hypothesis to this last derivation to obtain ${<} \Gamma; \mu^{'} {>} \vdash t : T$. Then, using rule \eqref{rule:typeNew}, ${<} \Gamma; \mu^{'} {>} \vdash new \ t : ref \ T$ as desired. 
+\end{itemize}
+\end{proof}
+
+Again, we shall expect the typing relation to be preserved in some form under context and variable substitution. 
+
+%%%% proof of typing preservation under context evaluation 
+\begin{lemma} \label{lemma:STLCTypingPreserveCon}
+Suppose that ${<} \Gamma; \mu {>} \vdash t, t^{'} : T$ and ${<} \Gamma; \mu{>} \vdash c[t] : T^{'}$ for a context $c$. Then, ${<} \Gamma ; \mu {>} \vdash c[t^{'}]: T^{'}$. 
+\end{lemma}
+\begin{proof}
+The proof is by induction on the structure of the context $c$. We will skip the cases that coincide with STLC as for these the proof is a straightforward adaptation of the analogous proof for STLC. 
+\begin{itemize}
+\item Let $c = new \ c_1$. By definition $c[t] = new \ c_1[t]$. Thus, if ${<} \Gamma; \mu {>} \vdash c[t] : T^{'}$ we have ${<} \Gamma; \mu {>} \vdash c_1[t] : T_1$ for some $T_1$ with $T^{'}  = ref \ T_1$. Applying the inductive hypothesis to $c_1$ we may write ${<} \Gamma; \mu {>} \vdash c_1[t^{'}] : T_1$. Applying rule \eqref{rule:typeNew} to this last derivation we get ${<} \Gamma; \mu{>} \vdash new \ c_1[t^{'}] : T^{'}$. Finally, observe that $new \ c_1[t^{'}] = (new \ c_1)[t^{'}] = c[t^{'}]$. 
+\item Let $ c = ! c_1$. .... 
+\end{itemize}
+\end{proof}
+
+\begin{lemma}
+If ${<} \Gamma, x : T; \mu {>} \vdash t : T^{'}$ and ${<} \Gamma ; \mu {>} \vdash r : T$, then ${<} \Gamma; \mu {>} \vdash t[x \mapsto r] : T^{'}$. 
+\end{lemma}
+
+We have now the necessary results to prove the progress lemma. 
+
+%%%% progress lemma 
+\begin{lemma}[Progress]
+If ${<}; \mu {>} \vdash t : T$, then either $t$ is a value or there are $\sigma, \sigma^{'}, t^{'}$ such that ${<}t, \sigma{>} \to {<}t^{'}, \sigma^{'}{>}$. 
+\end{lemma}
+\begin{proof}
+The proof is by induction on the structure of the typing derivation ${<}; \mu {>} \vdash t : T$. Observe that by Lemma \eqref{lemma:STLCTypingPreserveVar} we can exclude the case where $t = x$, for some variable $x$ and, therefore, the last rule applied cannot be \eqref{rule:typeVar}. Also, if the last rule applied was  \eqref{rule:typeAbs} or \eqref{rule:typeLoc} then in either case $t$ is already a value and we are done. With that in mind we present the proof for some of the remaining cases.  The others can be easily derived in a similar way. 
+\begin{itemize}
+\item \eqref{rule:typeApp} Then, $t = t_1t_2$ and applying the inductive hypothesis to the derivation ${<} ; \mu{>} \vdash t_1 : T^{'} \to T$ we conclude that (i) $t_1$ is a value or (ii) there is $t^{'}_1$ such that $t_1 \to t^{'}_1$. If (i) happens and taking into account that $t_1$ cannot be a location (because, otherwise ${<}; \mu{>} \vdash t_1 : ref \ T^{'}$ for some type  $T^{'}$) we can apply \eqref{rule:R-lambda}. On the other hand, if (ii) holds we may apply rule \eqref{rule:R-C}.
+
+\item \eqref{rule:typeNew}  Then, $t = new  \ t^{'}$. By induction on ${<}; \mu {>} \vdash t^{'} : T^{'}$, where $ref \ T^{'} = T$ we deduce that either $t^{'}$ is a value, in which case we may apply \eqref{rule:R-new}, or $t^{'} \to t^{''}$ and we apply \eqref{rule:R-new}. 
+\end{itemize}
+\end{proof}
+
+In order to prove the preservation lemma we will have to require more than a term being typable. For example, we may have the information that $!l$ has a type for a given location but that is not a sufficient condition to guarantee the typability of $\sigma(l)$ for some map $\sigma$ from locations to values. We have to somehow establish a relationship between a map $\mu$, from locations to types, and $\sigma$, from locations to values. That relationship is captured formally by the following definition. 
+
+\begin{definition}
+Let $\mu$ be a partial map from locations to types and let $\sigma$ be a partial map from locations to values. Also, let $\Gamma$ be a typing context. We say that $\mu$  \emph{agrees with} $\sigma$ on the context $\Gamma$  iff $domain(\sigma) = domain(\mu)$ and the following holds 
+\begin{align*}
+\forall l \in domain(\sigma)  \  {<}\Gamma;\mu{>} \vdash \sigma(l) : \mu(l)
+\end{align*}
+We denote that condition by $\Gamma  \vartriangleright \mu \approx \sigma$. 
+\end{definition}
+
+We can know state and prove the preservation lemma. 
+
+%%%% preservation lemma%%%%
+\begin{lemma}[Preservation]
+Suppose that ${<} \Gamma, \mu {>} \vdash t: T$, $\Gamma \vartriangleright \mu \approx \sigma$ and ${<}t, \sigma {>} \to {<} t^{'}, \sigma^{'} {>}$. Then, there is $\mu^{'}$ such that $\mu \subseteq \mu^{'}$, $\Gamma \vartriangleright \mu^{'} \approx \sigma^{'}$ and  ${<} \Gamma, \mu^{'} {>} \vdash t^{'} : T$. 
+\end{lemma} 
+\begin{proof}
+The proof is done by induction on the structure of the derivation ${<}t, \sigma {>} \to {<} t^{'}, \sigma^{'}{>}$. 
+\begin{itemize}
+\item \eqref{rule:R-C}. If ${<} \Gamma, \mu {>} \vdash c[t]$, then ${<} \Gamma, \mu {>} \vdash t:T^{'}$ for some type $T^{'}$. \footnote{META: Prove it!}. Applying the inductive hypothesis to ${<}t, \sigma{>} \to {<} t^{'}, \sigma^{'} {>}$ we conclude that there is $\mu^{'}$ such that $\mu \subseteq \mu^{'}$, ${<}\Gamma, \mu^{'} {>}\vdash t^{'} : T^{'}$ and $\Gamma \vartriangleright \mu^{'} \approx \sigma^{'}$. By Lemma \eqref{lemma:agreeLoc} we can deduce that ${<} \Gamma, \mu^{'} {>}  \vdash t: T^{'}$ and so we are in conditions of applying Lemma \eqref{lemma:STLCTypingPreserveCon} to obtain ${<}\Gamma, \mu^{'}{>} \vdash c[t^{'}] : T$. 
+
+\item \eqref{rule:R-lambda}.  An easy consequence of Lemma \eqref{lemma:STLCTypingPreserveVar}. 
+
+\item \eqref{rule:R-new}. Then, ${<} \Gamma; \mu {>} \vdash new \ v : ref \ T$, for some type $T$. Let $\mu^{'} = \mu[l \mapsto T]$. As a consequence of  \eqref{rule:typeLoc} we have ${<} \Gamma; \mu^{'}{>} \vdash l : ref \ T$. Furthermore, since ${<} \Gamma; \mu {>} \vdash v:T$, then ${<} \Gamma; \mu^{'}{>} \vdash : v:T$ (Lemma). Notice that $l$ is a new location and therefore does not occur in $v$. This, together with $\Gamma \vartriangleright \mu \approx \sigma$ and the definition of $\mu^{'}$, imply that $\Gamma \vartriangleright \mu^{'} \approx \sigma^{'}$. 
+
+\item \eqref{rule:R-!}.  Then, ${<} \Gamma; \mu {>} \vdash  \ !l : \mu(l)$ by applying consecutevely the typing rules \eqref{rule:typeLoc} and \eqref{rule:type!}. Let $\mu' = \mu$. Since $\Gamma \vartriangleright \mu \approx \sigma$ holds, ${<} \Gamma; \mu^{'}{>} \vdash : \sigma(l): \mu(l)$. Furthermore, as $\sigma^{'} = \sigma$, $\Gamma \vartriangleright \mu^{'} \approx \sigma^{'}$ also holds. 
+
+\item \eqref{rule:R-assign}. We have ${<} \Gamma; \mu {>} \vdash l : = v : T$. That must be derived using typing rule \eqref{rule:typeAss} and therefore we obtain (i) ${<} \Gamma; \mu {>} \vdash l : ref \ T$ and (ii) $ {<} \Gamma; \mu {>} \vdash v : T$. Thus, if we take $\mu^{'} = \mu$ we may write ${<} \Gamma ; \mu^{'} {>} \vdash v : T$.  Now we wish to prove that $\Gamma \vartriangleright \mu^{'} \approx \sigma^{'}$. Well, since $\sigma^{'}(l^{'}) = \sigma(l^{'})$ for every location $l^{'}$ expect possibly $l$, and  since we defined $\mu^{'} = \mu$, we only have to prove that $\Gamma \vdash  \sigma^{'}(l) : \mu^{'}(l)$. By (i) we conclude that $\mu(l) = T = \mu^{'}(l)$. Furthermore, $\sigma^{'}(l) = v$. Then, by (ii) the desired result holds. 
+
+\end{itemize}
+\end{proof}
+
+As it happened for STLC, safety follows from the progress and preservation lemma. 
+
+\begin{theorem}[Safety]
+If ${<}; {>} \vdash t : T$  and ${<}t, \sigma {>} \Downarrow {<} t^{'}, \sigma^{'}{>}$, then either $t^{'}$ is a value or there are $t^{''}, \sigma^{''}$ such that ${<}t^{'}, \sigma^{'}{>} \to {<} t^{''}, \sigma^{''}{>}$. 
+\end{theorem}
+\begin{proof}
+The proof can be obtained by induction on the length of the derivation of $\Downarrow$. Observe only that we can ensure the conditions required by the progress lemma because since ${<}; {>} \vdash t : T$, then $L(t) = \emptyset$ (Lemma \eqref{lemma:locInMu}). Therefore, we can take any $\mu$ for which $\Gamma \vartriangleleft \mu \approx \sigma$ holds, as by Lemma \eqref{lemma:agreeLoc} we also have ${<}; \mu{>} \vdash t : T$. 
+\end{proof}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,68 @@
+\documentclass[11pt, oneside]{article}   	% use "amsart" instead of "article" for AMSLaTeX format
+
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{syntax}
+\usepackage{bm}
+\usepackage{bussproofs}
+\usepackage{hyperref}
+\usepackage{thmtools}
+
+
+\declaretheorem[style = definition, qed = $\square$]{definition}
+\declaretheorem[style = remark, qed = $\square$]{notation}
+
+
+\theoremstyle{plain} 
+\newtheorem{lemma}{Lemma}
+
+\theoremstyle{plain} 
+\newtheorem{attempt} {Attempt}
+
+\theoremstyle{plain}
+ \newtheorem{theorem}{Theorem}
+ 
+ 
+\theoremstyle{remark}
+ \newtheorem{remark}{Remark}
+
+\newtheorem{innerex}{Exercise}
+\newenvironment{ex}[1]
+  {\renewcommand\theinnerex{#1}\innerex}
+  {\endinnerex}
+
+%Create a solution environment 
+%\newenvironment{solution}
+ % {\renewcommand\qedsymbol{$\blacksquare$}\begin{proof}[Solution]}
+  %{\end{proof}}
+  
+\newenvironment{solution}
+  {\begin{proof}[Solution]}
+  {\end{proof}}
+  
+
+
+\title{Selected Investigations on Type Theory}
+\author{P. Rocha}
+\date{\today}							
+
+\begin{document}
+
+\maketitle
+%\section{}
+%\subsection{}
+
+\include{LambdaCalculus}
+\include{STLCSyntaxSemantics}
+\include{STLCTyping}
+\include{NatBool}
+\include{STLCNormalization}
+\include{STLC+References}
+\include{STLC+ReferencesTyping}
+\include{Polymorphism
+}
+
+
+
+\end{document}  

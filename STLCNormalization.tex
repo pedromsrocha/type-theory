@@ -1,0 +1,64 @@
+% !TEX root = main.tex 
+
+\section{Normalization of STLC}
+
+
+In this section we prove an important property of STLC: if a term has a type, then it has a normal form.  It is a way of assuring us that if a term is well-typed then its computation terminates in a finite number of steps. As we shall see, that property is lost once we introduce references to our language. 
+
+We write $t \Downarrow$ to mean that there exists $t^{'}$ such that $t^{'}$ is a normal form and $t \Downarrow t^{'}$. The hypothesis that we want to prove is 
+
+\begin{align*}
+H_1: \quad  \Gamma \vdash t : T \implies t \Downarrow.
+\end{align*}
+
+We will try to prove hypotheis $H_1$ by induction on the structure of the type derivation $\Gamma \vdash t : T$ but, as we will see, we will not succeed. We will modify our hypothesis until we manage to prove it. Eventually, we will arrive at particular case of general method of proof employed in programming language semantics: the method of \emph{logical relations}. Our approach is far from \emph{clean} but at least it is \emph{pedagogical}. 
+
+\begin{attempt}
+Hypothesis $H_1$ is true. 
+\end{attempt}
+\begin{proof}[Wrong] 
+For proving $H_1$ by induction on the structure of the derivation $\Gamma \vdash t:T$ there are three cases to consider: (i) when $t$ is a variable, (ii) when $t$ is an application and (iii) when $t$ is an abstraction. Cases (i) and (iii) are trivial since both a variable and an abstraction are already normal forms. So let us consider (ii).  The derivation of $\Gamma \vdash t_1t_2:T$ follows from the derivations $\Gamma \vdash t_1 : T^{'} \to T$ and $\Gamma \vdash t_2: T^{'}$ using rule (REF). %%%TODO: type reference here%%% 
+We can apply the inductive hypothesis to $t_1$ and $t_2$ to get $t_1 \Downarrow t^{'}_1$ and $t_2 \Downarrow t^{'}_2$, where $t^{'}_1$ and $t^{'}_2$ are normal forms. It is easy to show that $t_1t_2 \Downarrow t^{'}_1t^{'}_2$. Now, if $t^{'}_1$ is  not an abstraction, then $t^{'}_1t^{'}_2$ is already a normal form and we are done. On the other hand, if $t^{'}_1 = \lambda x: \tau . \ s$, then we may apply \eqref{rule:lambda1} to obtain $t^{'}_1t^{'}_2 \to s[x \mapsto t^{'}_2]$. The problem here is that we cannot guarantee that $s$ is a subterm of $t_1$ and therefore we cannot apply the inductive hypothesis. %%%TODO: elaborate explanation 
+\end{proof}
+
+In order to get through the previous case of the application we may strengthen our hypothesis to cover that case.
+
+\begin{align*}
+H_2 : & \quad  \Gamma \vdash t:T \implies H^{a}_2(t) \text{ and } H^{b}_2(t),\\
+& \quad \text{where } H^{a}_2(t) = t \Downarrow \text{ and } H^{b}_2(t) = \forall t^{'} (t^{'} \Downarrow \implies tt^{'} \Downarrow) 
+\end{align*}
+
+\begin{attempt}
+Hypothesis $H_2$ is true. 
+\end{attempt}
+\begin{proof}[Wrong]
+The proof is again by induction on the structure of the derivation $\Gamma \vdash t:T$. We consider the case that leads to a problem, when $t$ is an abstraction. For suppose $t = \lambda x: \tau . \ s$. Then, since $t$ is a normal form we have $H^{a}_2(t)$. Also, in the type derivation of $t$ we must assign a type to $s$. Therefore, by induction $s$ satisfies $H_2$. Let $t^{'}$ be such that $t^{'} \Downarrow r$, for some normal form $r$. Thus, we may prove $tt^{'} \Downarrow tr$ and in turn $tr \to s[x \mapsto r]$. Now, we want to prove that $s[x \mapsto r]$ satisfies $H_2$ taking into account that $H_2(s)$ holds and $r$ is a normal form. If, for example, $s = x$, then $s[x \mapsto r] = r$. Here, again, we run into a problem. The only information that we have about $r$ is that it is a normal form. 
+\end{proof}
+
+We would like our hypothesis to be something of the form 
+
+\begin{align*}
+\Gamma \vdash t:T \implies H_3(t), \\
+\text{where } H_3(t) = t \Downarrow \text{ and } \forall t^{'} (H_3(t^{'}) \implies tt^{'} \Downarrow). 
+\end{align*}
+
+To get rid of the circular definition we can think of various predicates, each for a type, defined recursively as follows 
+
+\begin{align*}
+P_{\alpha}(t) &= t \Downarrow, \\
+P_{T_1 \to T_2}(t) &= t \Downarrow \text{ and } \forall t^{'} (P_{T_1}(t^{'}) \implies P_{T_2}(tt^{'})), 
+\end{align*}
+
+where $\alpha$ is meant to range over the basic types. 
+
+Now we prove $\Gamma \vdash t:T \implies P_T(t)$. By definition, for every type $T$, if term $t$ satisfies $P_T$, then $t$ has a normal form. 
+
+\begin{theorem}
+For every term $t$, $\Gamma \vdash t:T \implies P_T(t)$. 
+\end{theorem}
+\begin{proof}
+The proof is by induction on the structure of the derivation $\Gamma \vdash t:T$. 
+\begin{itemize}
+\item t is a variable. Then, $\Gamma, x:T \vdash x:T$. Since $x$ is a normal form, $x \Downarrow$. If $T = T_1 \to T_2$ we have also to prove that for every 
+\end{itemize}
+\end{proof}

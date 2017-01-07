@@ -1,0 +1,47 @@
+% !TEX root = main.tex 
+
+
+\section{The Type-Free Lambda Calculus}
+
+We start by defining the type-free lambda calculus, simply called lambda calculus. It was devised by the mathematician Alonzo Church as a formalism capable of expressing computation based on function abstraction. 
+
+Variables play a prominent role in defining functions. We need variables to abstract behaviour. We can define a function $f$ that acts on the set of natural numbers by an infinite list
+\begin{align*}
+f0 &= 0 + 1 \\
+f1 &= 1 + 1 \\
+f2 &= 2 + 1 \\
+f3 &= 3 + 1\\
+\vdots
+\end{align*}
+but that is cumbersome. Clearly, we observe a pattern and we succinctly define $f$ by $fx = x + 1$. 
+
+When we think of a function we commonly take an extensional view on its meaning. That is, the meaning of a function is rendered by the values that it outputs when applied to the elements of its domain. That is, if $f: X \to Y$ and $g: X \to Y$ then we define $f$ and $g$ to be the same if $fx = gx$ for every element $x$ of $X$. Function application, variables and abstraction are the key ingredients of the lambda calculus. 
+
+\begin{definition}
+Let $V$ denote a set of variables. We define the set of lambda terms, denoted by $\Lambda$, inductively as follows 
+\begin{align*}
+\Lambda ::=& \quad V 				\tag{variable}			\\
+		|& \quad \Lambda \Lambda 	\tag{function application}	\\
+		|& \quad \lambda V . \ \Lambda 		\tag{function abstraction} 	\\
+\end{align*}
+\end{definition}
+
+\begin{notation}
+We denote lambda terms by $t, p, q, r$ with or without number subscripts. And we denote variables by $x, y, z, w$ with or without number subscripts. 
+\end{notation}
+
+In mathematics, when we define a function $f$ as $f(x) = x + y$ we can see a distinction between the variables $x$ and $y$. The former is said do be bound to the definition of $f$ whereas the latter is said to be free. What does it mean? Well, a bound variable in a function definition is simply a placeholder. Something that we can replace by a value to obtain another value. On the other hand, a free variable is something that is left unspecified. In the function $f$, the variable $y$ is free. For different values of $y$ we will get different functions $f$. 
+
+But observe that when say free variable perhaps we mean \emph{free occurrence of a variable}. For example, in propositional logic we admit the formula 
+\begin{align*}
+	x = 2 \wedge \forall x. \ x \geq 1 
+\end{align*}
+where there are distinct occurrences of the variable $x$. The first occurrence (if our reading proceeds from the left to the right) is in the subformula $x = 2$ and it's a free occurrence while the third is in the subformula $x \geq 1$ and is boubd by the prefix-quantifier $\forall x$. 
+
+Being a placeholder, the name of a variable that is bound does not matter. For example, $f$ can also be defined as $f(z) = z + y$. We say that we can rename the bound variable $x$ to another one, provided that new one is not already a variable of $f$. The proviso makes sense for if we rename $x$ to $y$ we get something undesirable: $f(y) = y + y = 2*y$. 
+
+\begin{definition}
+
+\end{definition}
+
+

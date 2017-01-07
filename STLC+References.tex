@@ -1,0 +1,76 @@
+% !TEX root = main.tex 
+
+\section{Syntax and Semantics of SLTC + References}
+
+Now we will extend our basic language to incorporate references. Intuitively, a reference represents a mutable location in memory. We can create a reference, access its value and modify it. For that purpose, we consider new extensions to the previous definition of terms, values and types. %% add a reference! 
+
+\begin{align*}
+{<}term{>} \quad ::= & \quad \ldots \\
+			       &| \quad \mathbf{new} \ {<}term{>} \tag{creation} \\
+			       &| \quad \mathbf{!} {<}term{>} \tag{dereference}\\
+			       &| \quad {<}term{>}   \ \textbf{:=}  \ {<}term{>} \tag{assignment}\\
+			       &| \quad {<}location{>} \tag{location}\\		
+\\
+{<}value{>} \quad ::= & \quad \ldots \\
+				&|  \quad {<}location{>}\\
+\\
+{<}type{>} \quad::= & \quad \ldots \\
+			      &| \quad \mathbf{ref}  \ {<}type{>} \tag{reference type}
+\end{align*}
+
+Observe that we added a new syntactic category: the location. When evaluating a term we will have to keep record of the state of the memory.  Our $\to$-relation will now be between pairs ${<} t, \sigma{>}$ where $t$ is a term and $\sigma$ is a partial map from locations to values. We extend the definition of a context. 
+
+%%% extending contexts
+\begin{align*}
+{<}context{>} \quad ::= & \quad \ldots \\
+				   &| \quad \mathbf{new}  \ {<}context{>} \\
+				   &| \quad \mathbf{!} \ {<}context{>}\\
+				   &| \quad {<}context{>} \ \textbf{:=} \ {<}term{>} \ | \  {<}value{>} \ \textbf{:=} \ {<}context{>}
+\end{align*}
+
+Context substitution by a term $t$ is extended in an uniform way to cover the new cases. 
+
+%%%% extending definition of context substitution 
+\begin{align*}
+(new \ c)[t] &= new  \ c[t] \\
+(!c)[t] &= !c[t] \\
+(c := t^{'})[t] &= c[t] : = t^{'} \\
+(v := c)[t] &= v : = c[t]
+\end{align*}
+
+The new rules of evaluation are presented below. Notice that rules that operate with the constructs of the lambda calculus are pretty much the same. The only difference is that a memory map $\sigma$ was added as an element of the relation, but in these rules the map $\sigma$ is not changed. We can take this into account when proving results that express some property of the $\to$-relation. \footnote{META: The STLC + References language can be viewed as an extension of the language STLC. I think it would be nice when presenting proofs for the relations defined on STLC + References to also extend the previous analogous proofs of STLC. That is, like in programming,  \emph{to reuse these proofs}. Formalize these thoughts!}
+%%% rules of evaluation  
+\begin{align*}
+\frac
+{{<}t, \sigma{>} \to {<} t^{'}, \sigma^{'}{>}}
+{{<}c[t], \sigma{>} \to {<}c[t^{'}], \sigma^{'}{>}} \label{rule:R-C} \tag{R-C}\\
+\\
+\frac
+{}
+{{<}(\lambda x:T . \ t)v, \sigma {>} \to {<} t[x \mapsto v], \sigma {>} }\label{rule:R-lambda} \tag{R-$\lambda$} \\
+\\
+\frac
+{l \not\in domain(\sigma)}
+{ {<} new \ v , \sigma {>} \to {<} l, \sigma[l \mapsto v] {>} }  \label{rule:R-new} \tag{R-new}\\
+\\
+\frac
+{l \in domain(\sigma)}
+{ {<} !l, \sigma {>} \to {<} \sigma(l), \sigma {>}} \label{rule:R-!} \tag{R-!}\\
+\\
+\frac
+{}
+{ {<} l := v, \sigma {>} \to {<} v, \sigma[l \mapsto v] {>} } \label{rule:R-assign} \tag{R-assign} 
+\\
+\end{align*}
+
+The proof of the determinacy of the $\to$-relation is an easy extension of the proof given for STLC alone. As a matter of a fact we are in position of stating an proving a more general result that justifies not only the determinacy of the $\to$-relation for STLC+References but also the uniqueness of the typing relation, as we shall see in the next section. Both the $\to$-relation and the typing relation are defined inductively by a set of rules. Each rule $\mathcal{R}$ has an antecedent and a consequent that we denote by $\mathcal{R}_A$ and $\mathcal{R}_C$, respectively. Also, each antecedent and consequent can be written as an expression  of terms of a given syntactical form. For example, the consequent of rule \eqref{rule:R-new} can be applied only to terms of the form $new \ v$ where $v$ is some value. For each rule $\mathcal{R}$ we denote $\mathcal{R}_{appl}$ as the set of terms for which the the consequent of the rule can be applied. Then we can make the following two observations of the set of rules presented so far: (i) for each two distinct rules $\mathcal{R}_1$ and $\mathcal{R}_2$  we have $\mathcal{R}_1 \cap \mathcal{R}_2 = \emptyset$. and (ii) for each rule $\mathcal{R}$ every term that occurs in $\mathcal{R}_A$ is a subterm of term occurying in $\mathcal{R}_C$. We claim that these two conditions are sufficient for guaranteeing uniqueness of the relation being inductively defined. \footnote{META: Very, very informal. Formalize it, perhaps by introducing a preliminary section that proves general results like that. Check if Harper hasn't done that yet.}
+
+We can state the determinacy of the $\to$-relation for STLC+References only if we assume that there is some deterministic policy in rule \eqref{rule:R-new} to introduce a location that is not in the domain of $\sigma$. For example, we can suppose that the set of locations is denumerable, fix an enumeration, and then select the least location that does not belong to $\sigma$. Then, the following holds. 
+
+\begin{lemma}[Determinacy of $\to$-relation]
+If ${<}t, \sigma{>} \to {<}t_1, \sigma_1{>}$ and ${<}t, \sigma{>} \to {<}t_2, \sigma_2{>}$, then $t_1 = t_2$ and $\sigma_1 = \sigma_2$. 
+\end{lemma}
+
+As we did for STLC, we define $\Downarrow$ as the reflexive transitive closure of $\to$.  As a consequence of Lemma \eqref{lemma:determinacy-rtc}, the determinacy of $\to$ implies the determinacy of $\Downarrow$. 
+
+

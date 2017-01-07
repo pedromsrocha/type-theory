@@ -1,0 +1,130 @@
+% !TEX root = main.tex 
+
+\section{Typing in STLC}
+
+In this section we present the type rules for STLC and prove the fundamental property of safety: well-typed terms do not get stuck. That is, if a term $t$ is well-typed then it is not the case that $t \Downarrow t^{'}$ where $t^{'}$ is a normal form but not a value. It is a guarantee that well-typed terms have \emph{meaning}.  
+
+In order to define the type of a term that contains free variables, we have to define a priori the type of those variables. For example, let $t = xt^{'}$ where $t^{'}$ is known to have type $T^{'}$. Intuitively we can assign a type to $t$ if the type of $x$ is $T^{'} \to T$,  the type of a function that maps terms of type $T^{'}$ to terms of type $T$. But there is no way of deducing the type of $x$ from its structure alone.  To deal with that we use typing contexts. A typing context $\Gamma$ is a partial function that maps variables to types. We write $x \in \Gamma$ to mean that $x \in domain(\Gamma)$ and $x:T \in \Gamma$ to mean that $\Gamma(x) = T$. If $\Gamma$ is such that $x \not \in domain(\Gamma)$ then $\Gamma, x:T$ is the typing context $\Gamma^{'}$ which extends $\Gamma$ with $x:T$. \footnote{We say that partial function $f_2$ extends $f_1$ with pair $(a,b)$ if $domain(f_2) = domain(f_1) \cup \{a\}$ and $f_2(a) = b$.}
+
+The typing relation $\vdash$ is a ternary relation between typing contexts, terms and types. We write $\Gamma \vdash t:T$ to mean that under typing context $\Gamma$, term $t$ has type $T$. The relation is defined by the inference rules
+ 
+\begin{align*}
+\frac
+{}
+{\Gamma, x:T \vdash x:T} \label{rule:type-var} \tag{$\lambda$-TypeVar}\\
+\\
+\frac
+{\Gamma, x:T_1 \vdash t:T_2}
+{\Gamma \vdash \lambda x : T_1 . \ t: T_1 \to T_2} \label{rule:type-abs} \tag{$\lambda$-TypeAbs}\\
+\\
+\frac 
+{\Gamma \vdash t_1 : T_1 \to T_2 \quad \Gamma \vdash t_2 : T_2}
+{\Gamma \vdash t_1t_2: T_2} \label{rule:type-app} \tag{$\lambda$-TypeApp}
+\end{align*}
+
+We should expect the type of term $t$ to be determined uniquely by a typing context and its structure. 
+
+\begin{theorem}[Uniqueness of the typing relation] If $\Gamma \vdash t: T$ and $\Gamma \vdash t: T^{'}$, then $T = T^{'}$. 
+\end{theorem}
+\begin{proof}
+The proof is by induction on the structure of the term $t$. 
+\begin{itemize}
+\item $t = x$. If $\Gamma \vdash x:T$ then $x:T \in \Gamma$, using rule \eqref{rule:type-var}. Since $\Gamma$ is a partial function, it assigns at most one type to a variable. Thus, it cannot be the case that $x:T^{'} \in \Gamma$ for $T \neq T^{'}$. 
+\item $t = \lambda x:T_1. \ s$. In the derivation $\Gamma \vdash t : T$ the last rule applied was \eqref{rule:type-abs}. Then, $T = T_1 \to T_2$ for some $T_2$ such that $\Gamma, x:T_1 \vdash s:T_2$. Similarly, $T^{'} = T_1 \to T^{'}_2$ for some $T^{'}_2$ where $\Gamma, x:T_1 \vdash s:T^{'}_2$. Applying the inductive hypothesis to $s$ we conclude that $T_2 = T^{'}_2$ and, consequently,  that $T = T^{'}$. 
+\item $t = t_1t_2$. In the derivation $\Gamma \vdash t : T$ the last rule applied was \eqref{rule:type-app}. Then, $\Gamma \vdash t_1 : T_1 \to T$ and $\Gamma \vdash t_2 : T_1$, for some $T_1$. In a similar way, if $\Gamma \vdash t: T^{'}$, then $\Gamma \vdash t_1 : T^{'}_1 \to T^{'}$ and $\Gamma \vdash t_2 : T^{'}_1$, fro some $T^{'}_1$. Applying the inductive hypothesis to both $t_1$ and $t_2$ we get $T_1 \to T = T^{'}_1 \to T^{'}$ and $T^{'}_1 = T_1$. From these two equation we can derive $T = T^{'}$. 
+\end{itemize}
+\end{proof}
+
+Furthermore, intuitively we observe that if a variable $x$ occurs free in a term $t$, then the only way of assigning a type to $t$ is to assume the type of $x$. This expressed formally by the following lemma. 
+
+\begin{lemma}\label{lemma3}
+If $\Gamma \vdash t : T$, then $FV(t) \subseteq domain(\Gamma)$. 
+\end{lemma} 
+\begin{proof}
+The proof is by induction on the structure of $t$. 
+\begin{itemize}
+\item If $t = x$, for some variable $x$, then  $FV(x) = \{x\}$. Furthermore, the only way of deriving $\Gamma \vdash t: T$ is by applying \eqref{rule:type-var}. Thus, $x \in domain(\Gamma)$. 
+\item Let $t = \lambda x: T.^{'} \ s$. The last rule applied was \eqref{rule:type-abs} to $\Gamma, x : T^{'} \vdash  s: T$. Applying the inductive hypothesis to $s$, we get $FV(s) \subseteq domain(\Gamma) \cup \{x\}$. Since $FV(t) = FV(s) \setminus \{x\}$, we get $FV(t) \subseteq domain(\Gamma)$.   
+\item Let $t = t_1t_2$. The last rule was \eqref{rule:type-app}, applied to derivations $\Gamma \vdash t_1: T^{'} \to T$ and $\Gamma \vdash t_2: T^{'}$. By the inductive hypothesis, $FV(t_1), FV(t_2) \subseteq domain(\Gamma)$. Thus, $FV(t) = FV(t_1) \cup FC(t_2) \subseteq domain(\Gamma)$. 
+\end{itemize}
+\end{proof} 
+
+Before we proceed we need to state and prove two auxiliary results about the preservation of typing that will reveal useful when proving the fundamental property of safety. 
+
+\begin{lemma}\label{lemma:typeContext}
+Suppose that $\Gamma \vdash t, t^{'} : T$ and $\Gamma \vdash c[t] :T^{'}$ where $c$ is a context. Then, $\Gamma \vdash c[t^{'}] : T^{'}$.
+\end{lemma}
+\begin{proof}
+The proof is by induction on the structure of the context $c$. 
+\begin{itemize}
+\item If $c = []$, then $c[t] = t$ and $c[t^{'}] = t^{'}$. By the uniqueness of the typing relation, $T = T^{'}$. 
+\item Let $c = c_1c_2$ where $c_1$ and $c_2$ are contexts. Notice that $(c_1c_2)[t] = c_1[t]c_2[t]$. Then, in the derivation of $\Gamma \vdash c[t]: T^{'}$ the last rule applied is \eqref{rule:type-app}. Thus, $\Gamma \vdash c_1[t]: T^{''} \to T^{'}$ and $\Gamma \vdash c_2[t] : T^{''}$, for some type $T^{''}$. Applying the inductive hypothesis to both $c_1$ and $c_2$, we may conclude that $\Gamma \vdash c_1[t^{'}] :  T^{''} \to T^{'}$ and $\Gamma \vdash c_2[t^{'}] : T^{''}$, respectively. Applying rule \eqref{rule:type-app} to these last derivations we derive $\Gamma \vdash c_1[t^{'}]c_2[t^{'}] : T^{'}$. Since $c_1[t^{'}]c_2[t^{'}] = (c_1c_2)[t^{'}]$ this concludes the proof. 
+\item If $c = c_1v$ where $c_1$ is a context and $v$ is a value the approach is similar to the one used above. 
+\end{itemize}
+\end{proof}
+
+\begin{lemma}\label{lemma:typeSubs}
+If $\Gamma, x: T \vdash t : T^{'}$ and $\Gamma \vdash r : T$, then $\Gamma \vdash t[x \mapsto r] : T^{'}$. 
+\end{lemma}
+\begin{proof}
+The proof is by induction on the structure of $t$. 
+\begin{itemize}
+\item Let $t = y$. We consider first the case where $y \neq x$. Then, $y : T^{'} \in \Gamma$. Thus, $\Gamma \vdash t : T^{'}$. Furthermore, $t[x \mapsto r] = t$. Now, let $t = x$. Then, $T = T^{'}$ and as $t[x \mapsto r] = r$, the consequence is contained in the antecedent. 
+\item Let $t = t_1t_2$.  Since $\Gamma, x : T \vdash t: T^{'}$, then $\Gamma, x:T \vdash t_1: T^{''} \to T^{'}$ and $\Gamma, x:T \vdash t_2 : T^{''}$, for some type $T^{''}$. Applying the inductive hypothesis to $t_1$ and $t_2$ we can derive $\Gamma \vdash t_1[x \mapsto r] : T^{''} \to T^{'}$ and $\Gamma \vdash t_2[x \mapsto r] : T^{''}$, respectively. By rule \eqref{rule:type-app}, it follows $\Gamma \vdash t_1[x \mapsto r]t_2[x \mapsto r] : T^{'}$. We conclude by noticing that $(t_1t_2)[x \mapsto r] = t_1[x \mapsto r]t_2[x \mapsto r]$. 
+
+\item Let $t = \lambda y : T_1 . \ s$. A trivial case occurs when $x = y$. For then $\Gamma \vdash t : T^{'}$ and $t[x \mapsto r] = t$. \footnote{META: We have to prove that if $\Gamma_1 \vdash t: T$ and $\Gamma_2$ is such that $\Gamma_2(x) = \Gamma_1(x)$ for every $x \in FV(t)$, then $\Gamma_2 \vdash t:T$.}  So let us consider the case when $y \neq x$. If $\Gamma, x:T \vdash t : T^{'}$ then (as $t$ is an abstraction) $\Gamma, x:T, y:T_1 \vdash s: T_2$, where $T_1$ and $T_2$ are such that $T^{'} = T_1 \to T_2$. Applying the inductive hypothesis to $s$ we can derive $\Gamma, y:T_1 \vdash s[x \mapsto r]:T_2$, which in turn allow us to apply rule \eqref{rule:type-abs} in order to derive $\Gamma \vdash \lambda y :T_1. \ s[x \mapsto r] : T^{'}$. Finally notice that since $x \neq y$, $t[x \mapsto r] = \lambda y : T_1 . \ s[x \mapsto r]$. 
+\end{itemize}
+\end{proof}
+
+
+Now we prove the fundamental property of safety. The proof is usually done by splitting it in the proof of two easier properties: preservation and progress. By preservation we mean that typability of a term is preserved under the $\to$-relation, whereas by progress we mean that if a closed term is typable then it is either a value or else it is not a normal form. A closed term is one that does not contain occurrences of free variables. 
+
+\begin{lemma}[Preservation]\label{lemma:preservation}
+If $\Gamma \vdash t : T$ and $t \to t^{'}$, then $\Gamma \vdash t^{'} : T$.
+\end{lemma} 
+\begin{proof}
+The proof is done by induction on the structure of $t$. If $t$ is either a variable or an abstraction, then, as $t$ is a normal form, the hypothesis holds vacuously. So let us suppose that $t$ is an application. The reduction $t \to t^{'}$ may be obtained either by a contextual rule of the form \eqref{rule:lambdaC} or by rule \eqref{rule:lambda1} in which case we may apply either Lemma \eqref{lemma:typeContext} or Lemma \eqref{lemma:typeSubs}, respectively,  plus the inductive hypothesis to prove the desired result. 
+\end{proof}
+
+\begin{lemma}[Progress]\label{lemma:progress}
+If $\vdash t: T$, then either $t$ is a value or there is a $t^{'}$ such that $t \to t^{'}$. 
+\end{lemma} 
+\begin{proof}
+The proof is done by induction on the structure of $t$. If $t$ is a variable then the hypothesis holds vacuously as a consequence of Lemma \eqref{lemma3}.  On the other hand, if $t$ is an abstraction then $t$ is already a value and we're done. Now, if $t = t_1t_2$, then $\vdash t_1 : T^{'} \to T$. Applying the inductive hypothesis to $t_1$, we conclude that $t_1$ is either a value or there is a $t^{'}_1$ such that $t_1 \to t^{'}_1$, in which case we can apply either rule \eqref{rule:lambda1} or a contextual rule \eqref{rule:lambdaC}, respectively. 
+\end{proof} 
+
+The proof of the fundamental property property is now obtained as a consequence of the previous lemmas. 
+
+\begin{theorem}[Safety]
+If $ \vdash t : T$ and  $t \Downarrow t^{'}$, then either $t^{'}$ is a value or there is a $t^{''}$ such that $t^{'} \to t^{''}$. 
+\end{theorem}
+\begin{proof}
+The proof is by induction on the length of the reduction $t \Downarrow t^{'}$. 
+\begin{itemize}
+\item If $t = t ^{'}$, the hypothesis follows from Lemma \eqref{lemma:progress}. 
+\item Suppose that $t \to s$ and $s \Downarrow t^{'}$. By Lemma \eqref{lemma:preservation}, $\vdash s: T$. Therefore, we can apply the inductive hypothesis to $s \Downarrow t^{'}$ to conclude the desired result. 
+\end{itemize}
+\end{proof}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

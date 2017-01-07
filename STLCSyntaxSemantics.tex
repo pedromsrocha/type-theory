@@ -1,0 +1,98 @@
+\section{Syntax and Semantics of STLC}
+
+In this section we describe the syntax and the semantics of the simply typed lambda calculus (STLC) with type annotations. 
+
+\begin{align*}
+{<}term{>} \quad ::=& \quad  {<}var{>} \tag{variable}\\ 
+&| \quad \bm{\lambda} {<}var{>}\bm{:}{<}type{>} \ \bm{.} \ {<}term{>} \tag{abstraction}\\
+&| \quad {<}term{>} \ {<}term{>} \tag{application}\\
+\\
+{<}type{>} \quad::=& \quad {<}basic{>} \tag{basic type}\\
+&| \quad {<}type{>} \bm{\to} {<}type{>} \tag{functional type}
+\end{align*}
+
+Intuitively a computation in the simply typed lambda calculus corresponds to the simplification of a an application of the form $(\lambda x:T . \ t_{1})t_{2}$, where $t_1$ and $t_2$ are terms. We perform that simplification until we arrive to something that cannot be simplified. That corresponds to our set of \emph{values}, syntactically defined by 
+
+\begin{align*}
+{<} value {>} ::= \quad \bm{\lambda} {<}var{>}\bm{:}{<}type{>} \ \bm{.} \ {<}term{>}  \tag{value}
+\end{align*} 
+
+We will know define the rules that allow us to perform computations on our set of terms. We want to define a binary relation $\to$ between the terms such that if $t_1 \to t_2$ then, intuitively, we may read that the term $t_1$ was simplified to $t_2$ in one step. 
+
+
+\begin{align*}
+\frac
+{}
+{(\lambda x:T . \ t)v \to t[x \mapsto v]} \label{rule:lambda1} \tag{$\lambda1$} \\
+\\
+\frac
+{t_1 \to t^{'}_1}
+{t_1 t_2 \to t^{'}_1 t_2}  \label{rule:lambda2}\tag{$\lambda2$}\\ 
+\\
+\frac 
+{t \to t^{'}}
+{vt \to vt^{'}} \label{rule:lambda3} \tag{$\lambda3$}
+\end{align*}
+
+
+We say that a term $t$ is a \textbf{normal form} if there is no $t^{'}$ for which $t \to t^{'}$. Conveniently, we observe that every value of our language is a normal form as there is no $\to$-rule whose conclusion is an abstraction. 
+
+Observe that rule \eqref{rule:lambda1} is the only one which actually informs us to do something. Rules \eqref{rule:lambda2} and \eqref{rule:lambda3} are there only to fix the order of evaluation. For example, when evaluating a term of the form $t_1 t_2$, first we must evaluate $t_1$ (the operator) and only after $t_1$ is reduced to a value (an abstraction) we can proceed to the evaluation of $t_2$ (the operand). Similar rules will appear as we extend our basic language. In order to avoid the repetition of these when defining the transition semantics, we will subsume them under a single framework: evaluation contexts. 
+
+\begin{align*}
+{<}context{>} ::= \quad [ \ ] \ | \ {<}context{>} {<}term{>} \ | \ {<}value{>} {<}context{>}  \tag{context}
+\end{align*}
+
+We define substitution $c/t$ of context $c$ by a term $t$ inductively as follows 
+\begin{align*}
+[ \ ] / t &= t, \\
+(ct^{'})/t &= (c/t)t^{'},\\
+(vc)/t &= v (c/t).
+\end{align*}
+
+Now we can subsume rules \eqref{rule:lambda2} and \eqref{rule:lambda3} under a single rule
+\begin{align*}
+\frac
+{t \to t^{'}}
+{(c/t) \to (c/t^{'})}  \label{rule:lambdaC} \tag{$\lambda C$} 
+\end{align*}
+
+Obviously we can prove these sets of rules to be equivalent in the following sense. Suppose that $\to$ stands for the relation as defined by \eqref{rule:lambda1} - \eqref{rule:lambda3} whereas $\rightsquigarrow$ is the relation obtained using  only \eqref{rule:lambda1} and \eqref{rule:lambdaC}. Then, for any two terms $t_1$ and $t_2$, $t_1 \to t_2$ iff $t_1 \rightsquigarrow t_2$. 
+
+Having defined the evaluation relation $\to$, we can now define the meaning of a term as the term that we can derive by applying $\to$ as many times as necessary until we arrive to a value. Let $\Downarrow$ be the reflexive transitive closure of $\to$, that is
+\begin{align*}
+\frac
+{}
+{t \Downarrow t} \tag{reflexivity}\\
+\\
+\frac
+{t_1 \Downarrow t_2 \quad t_2 \Downarrow t_3}
+{t_1 \Downarrow t_3} \tag{transitivity}\\
+\\
+\frac
+{t_1 \to t_2}
+{t_1 \Downarrow t_2} \tag{closure}
+\end{align*}
+
+We can say that a term has \emph{a meaning}  instead of \emph{meanings} as consequence of the following result. 
+
+\begin{lemma}[Determinacy of $\to$-relation]  If $t_1 \to t_2$ and $t_1 \to t^{'}_2$, then $t_2 = t^{'}_2$. 
+\end{lemma}
+\begin{proof}
+The proof is by induction on the structure of $t_1$. If $t_1$ is either a variable or an abstraction then, as there is no rule whose consequence is of the form $t \to t^{'}$ where either $t$ is a variable or an abstraction, the hypothesis holds vacuously. 
+
+Now suppose $t_1$ to be an application. Observe that the structure of $t_1 = t_{11}t_{12}$ determines uniquely the last rule used on the derivation of $t_1 \to t_2$ (or $t_1 \to t^{'}_2$) and vice-versa. For if the last rule used was  
+\begin{itemize}
+\item \eqref{rule:lambda1} then $t_1 =  (\lambda x \ : \ Q. \ t)v$ (both $t_{11}$ and $t_{12}$ are values). Consequently both $t_2$ and $t^{'}_2$ are equal to $t[x \mapsto v]$. 
+\item \eqref{rule:lambda2} then $t_{11}$ is not a value since the premiss of this rule states that $t_{11} \to t^{'}_{11}$. Our desired result follows by applying the inductive hypothesis to $t_{11}$. 
+\item \eqref{rule:lambda3} then $t_{11}$ is a value and $t_{12}$ is not. The result follows by applying the inductive hypothesis to $t_{12}$.
+\end{itemize}
+The observation rests on the fact that \emph{ $t_{11}, t_{12}$ are values}, \emph{$t_{11}$ is not a value while $t_{12}$ is} and \emph{$t_{12}$ is not a value while $t_{11}$ is} are mutually disjoint propositions.
+\end{proof} 
+
+We can extend that result to the multi-step evaluation $\Downarrow$, since $t \Downarrow t^{'}$ iff $t = t^{'}$ or there is a sequence $t_1, t_2, \ldots, t_n$ of $n > 1$ terms such that $t_i \to t_{i+1}$ for each $i < n$.  As a matter of fact we can prove a more general result. 
+
+\begin{lemma}  \label{lemma:determinacy-rtc} Let $R$ be a binary relation and $R^{*}$ its reflexive transitive closure. Then $R$ enjoys the determinacy property iff $R^{*}$ does. 
+\end{lemma} 
+
+
